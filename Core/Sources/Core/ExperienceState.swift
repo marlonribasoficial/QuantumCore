@@ -45,7 +45,6 @@ public enum ExperienceState: Sendable {
         switch self {
         case .lookingToAtom,
              .exploring,
-             .shellDiscovered,
              .nucleus:
             return true
         default:
@@ -84,7 +83,7 @@ public enum ExperienceState: Sendable {
         case .shellDiscovered:
             return InteractionState(
                 canRotate: true,
-                canZoom: true,
+                canZoom: false,
                 canInteractWithShell: true,
                 canInteractWithNucleus: false
             )
@@ -137,7 +136,7 @@ public enum ExperienceState: Sendable {
         case .insideProton:
             return InteractionState(
                 canRotate: true,
-                canZoom: true,
+                canZoom: false,
                 canInteractWithQuarks: true
             )
 

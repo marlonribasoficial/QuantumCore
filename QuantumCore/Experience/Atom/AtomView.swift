@@ -100,23 +100,30 @@ private extension AtomView {
 
     var atomRealityView: some View {
         RealityView { content in
-            let loadedAtom = loader.atom.clone(recursive: true)
+            let atomScene = loader.atom.clone(recursive: true)
+
+            // A cena Atomo do RCP tem ~1,21m de diâmetro; o Atom.usdz antigo tinha 2,0m.
+            // O container compensa a diferença para preservar os thresholds de escala do
+            // ViewModel (3, 500, 1500…) e o tamanho relativo das partículas spawnadas.
+            atomScene.scale = .one * 1.65
+            let loadedAtom = Entity()
+            loadedAtom.addChild(atomScene)
 
             loadedAtom.enableCollision()
             content.add(loadedAtom)
 
             atom = loadedAtom
-            nucleus = loadedAtom.findEntity(named: "Nucleus")
-            electronShell = loadedAtom.findEntity(named: "ElectronShell")
+            nucleus = loadedAtom.findEntity(named: "Nucleo")
+            electronShell = loadedAtom.findEntity(named: "Eletrosfera")
 
             #if os(visionOS)
             // Posiciona o átomo 1.5m à frente e na altura dos olhos do usuário
             loadedAtom.position = [0, 1.5, -1.5]
             #endif
 
-            if let nucleus, let animation = nucleus.availableAnimations.first {
-                nucleus.playAnimation(animation.repeat())
-            }
+            // Timelines do RCP (respiração da eletrosfera + spin do núcleo).
+            // O RCP não tem toggle de loop — o loop é sempre feito por código.
+            playAllTimelines(from: atomScene)
 
             if vm.experienceState == .zoomingOutFromNucleus {
                 loadedAtom.scale = .one * 900
@@ -404,6 +411,29 @@ private extension AtomView {
     }
 }
 
+// MARK: - RCP Timelines
+private extension AtomView {
+
+    /// Toca em loop todas as timelines da cena, onde quer que estejam na hierarquia
+    /// (cenas do RCP podem expor animações no root ou em sub-entidades referenciadas).
+    ///
+    /// Cada timeline do RCP entra na AnimationLibrary duas vezes: a versão normal e uma
+    /// variante "__auto_generated_looping". Toca só a variante de loop — tocar as duas na
+    /// mesma entidade faz a segunda cancelar a primeira.
+    func playAllTimelines(from entity: Entity) {
+        if let library = entity.components[AnimationLibraryComponent.self] {
+            let animations = Array(library.animations)
+            let looping = animations.filter { $0.key.hasSuffix("__auto_generated_looping") }
+            for (_, resource) in (looping.isEmpty ? animations : looping) {
+                entity.playAnimation(resource.repeat())
+            }
+        }
+        for child in entity.children {
+            playAllTimelines(from: child)
+        }
+    }
+}
+
 // MARK: - Entity Spawning
 private extension AtomView {
 
@@ -411,7 +441,8 @@ private extension AtomView {
         guard let atom else { return }
         let loaded = loader.electron.clone(recursive: true)
 
-        loaded.scale = .one * 0.0005
+        // Cena Eletron do RCP tem ~0,55m (Electron.usdz antigo: 2,0m) → 0,0005 × 3,65
+        loaded.scale = .one * 0.0018
 
         let localPos = atom.convert(position: worldPosition, from: nil)
         let direction = normalize(localPos)
@@ -422,32 +453,25 @@ private extension AtomView {
 
         atom.addChild(loaded)
 
-        guard let electronEntity = loaded.findEntity(named: "Electron") else { return }
-
-        electron = electronEntity
+        electron = loaded
         vm.setExperienceState(.electronSpawned)
 
-        if let animation = electronEntity.availableAnimations.first {
-            electronEntity.playAnimation(animation.repeat())
-        }
+        playAllTimelines(from: loaded)
     }
 
     func spawnPhotonEntity(at worldPosition: SIMD3<Float>) async {
         guard let atom else { return }
         let loaded = loader.photon.clone(recursive: true)
 
-        loaded.scale = .one * 0.00017
+        // Cena Foton do RCP tem 0,22m (Photon.usdz antigo: 2,0m) → 0,00017 × 9,1
+        loaded.scale = .one * 0.0015
         loaded.position = worldPosition
 
         atom.addChild(loaded)
 
-        guard let photonEntity = loaded.findEntity(named: "Photon") else { return }
+        photon = loaded
 
-        photon = photonEntity
-
-        if let animation = photonEntity.availableAnimations.first {
-            photonEntity.playAnimation(animation)
-        }
+        playAllTimelines(from: loaded)
     }
 
     func spawnZBoson(at worldPosition: SIMD3<Float>) async {

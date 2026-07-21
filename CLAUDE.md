@@ -6,6 +6,8 @@ QuantumCore é uma experiência educativa interativa para iOS, iPadOS e visionOS
 
 Desenvolvido para o Swift Student Challenge 2025.
 
+**Design:** `DESIGN.md` na raiz do repo é a fonte única de verdade das decisões de design, modelos 3D e animações. Consultar antes de qualquer trabalho visual.
+
 ---
 
 ## Estrutura de pastas atual
@@ -13,66 +15,82 @@ Desenvolvido para o Swift Student Challenge 2025.
 ```
 QuantumCore/
 │
+├── CLAUDE.md
+├── DESIGN.md                          ← Fonte única de verdade de design/3D/animações
+│
 ├── Core/                              ← Swift Package local (sem SwiftUI/RealityKit)
 │   └── Sources/Core/
-│       ├── Core.swift                 # Namespace público
-│       ├── ExperienceState.swift      # Enum com 34 cases + interactionConfiguration()
+│       ├── ExperienceState.swift      # Enum de estados da experiência + interactionConfiguration()
 │       ├── InteractionState.swift     # Struct de flags de interação
 │       ├── OverlayType.swift          # Enum de partículas + InteractionText
 │       ├── Scripts.swift              # Todos os textos de diálogo (strings estáticas)
 │       ├── DialogueEngine.swift       # Máquina de estado do diálogo (struct puro) + DialogueSequence
+│       ├── EnergyReward.swift         # Valores de energia creditados por interação
 │       └── DeviceTypes.swift          # DeviceTab, IntroPhase, DeviceMode, HomeOverlay
 │
 └── QuantumCore/                       ← App target (SwiftUI + RealityKit)
-    ├── QuantumCoreApp.swift            # Entry point
-    ├── HomeView.swift                  # Tela inicial / menu
-    ├── LoadingView.swift               # Tela de carregamento
+    ├── App/
+    │   ├── QuantumCoreApp.swift        # Entry point: LoadingView → StartView; visionOS: ImmersiveSpace "AtomSpace"
+    │   ├── LoadingView.swift           # Tela de carregamento (enquanto AssetLoader carrega)
+    │   ├── StartView.swift             # Tela inicial — dá lugar à ExperienceRoot
+    │   ├── AtomImmersiveView.swift     # visionOS: AtomView dentro do ImmersiveSpace
+    │   └── HomeView.swift              # LEGADO — não referenciado em lugar nenhum
     │
-    ├── RealityKitViews/
-    │   ├── AtomView.swift              # Cena 3D do átomo — apenas render + gestos
-    │   ├── AtomViewModel.swift         # Lógica de estado e diálogos do átomo
-    │   ├── NucleusView.swift           # Cena 3D do núcleo — apenas render + gestos
-    │   ├── NucleusViewModel.swift      # Lógica de estado e diálogos do núcleo
-    │   └── ParticlePanel.swift         # Painel de informações da partícula
-    │
-    ├── Panel/
+    ├── Experience/
     │   ├── ExperienceRoot.swift        # Coordenador raiz da experiência
-    │   ├── DeviceScreen.swift          # Tela do dispositivo/robô — apenas render
-    │   ├── DeviceScreenViewModel.swift # Lógica de fluxo intro/ending
-    │   ├── HomePanel.swift             # Container do painel Home
-    │   ├── SystemPanel.swift           # Container do painel System
-    │   ├── RobotView.swift             # Visual do robô narrador
-    │   ├── SystemOfflineView.swift     # Tela de sistema offline
-    │   └── RoundedCorner.swift         # Helper de shape
+    │   ├── SystemFeedbackPresenting.swift  # Protocolo: feedback compartilhado (energia → modal → esconder)
+    │   ├── Atom/
+    │   │   ├── AtomView.swift          # Cena 3D do átomo — apenas render + gestos
+    │   │   └── AtomViewModel.swift     # Lógica de estado e diálogos do átomo
+    │   └── Nucleus/
+    │       ├── NucleusView.swift       # Cena 3D do núcleo — apenas render + gestos
+    │       └── NucleusViewModel.swift  # Lógica de estado e diálogos do núcleo
     │
-    ├── States/
-    │   └── OverlayType+Color.swift     # Extensão de cor (SwiftUI) para OverlayType do Core
+    ├── Device/                         ← Tela do dispositivo/robô (Max)
+    │   ├── DeviceScreen.swift          # Render da tela do dispositivo
+    │   ├── DeviceScreenViewModel.swift # Lógica de fluxo intro/ending
+    │   ├── HomePanel.swift             # Painel Home (usa CoreTransformationView / SystemOnlineView)
+    │   ├── SystemPanel.swift           # Painel System (usa CoreChamberView)
+    │   ├── CoreChamberView.swift       # Câmara do core (online/offline)
+    │   ├── CoreTransformationView.swift # Animação de transformação do core
+    │   ├── SystemOnlineView.swift      # Tela de sistema online
+    │   ├── SystemOfflineView.swift     # Tela de sistema offline
+    │   ├── RobotView.swift             # Visual do robô narrador
+    │   └── MaxFaceView.swift           # Rosto do robô Max
     │
     ├── Dialogue/
-    │   ├── DialogueManager.swift       # Wrapper @Published sobre DialogueEngine do Core
+    │   ├── DialogueManager.swift       # Wrapper @Observable sobre DialogueEngine do Core
     │   ├── DialogueBubbleView.swift    # Bolha de diálogo
     │   └── DialogueBox.swift           # Container do diálogo
     │
-    ├── Systems/
-    │   ├── SystemView.swift            # View do painel de sistemas
+    ├── Components/                     ← Componentes SwiftUI reutilizáveis
+    │   ├── QuantumCoreView.swift       # Gráfico do Quantum Core (anéis de sistemas + varredura)
+    │   ├── ConcentricCore.swift        # Anéis concêntricos animáveis
+    │   ├── InteractionOverlay.swift    # Dica de gesto na base da cena
+    │   ├── ParticlePanel.swift         # Painel de informações da partícula
     │   ├── SystemFeedback.swift        # Feedback visual pós-interação
-    │   ├── SystemLabel.swift           # Label de sistema
-    │   └── ModalContainer.swift        # Container modal
-    │
-    ├── TopBar/
+    │   ├── ModalContainer.swift        # Container modal
     │   ├── TopBar.swift                # Barra superior
     │   ├── TabButton.swift             # Botão de aba
-    │   └── BatteryView.swift           # Indicador de energia
+    │   ├── ScanlineOverlay.swift       # Overlay de scanlines (estética CRT)
+    │   ├── StartBackground.swift       # Fundo da tela inicial
+    │   ├── LookInsideButton.swift      # Botão "Look inside" da StartView
+    │   └── AboutYouSheet.swift         # Sheet "About you" da StartView
     │
-    ├── Entity/
-    │   ├── EntityTransform.swift       # Extensão de transformação de entidade
-    │   ├── EntityDescendant.swift      # Extensão de hierarquia de entidade
-    │   └── EntityInteractivity.swift   # Extensão de interatividade de entidade
+    ├── RealityKit/                     ← Extensões de Entity
+    │   ├── EntityTransform.swift       # Transformação de entidade
+    │   ├── EntityDescendant.swift      # Hierarquia de entidade
+    │   └── EntityInteractivity.swift   # Interatividade de entidade
     │
-    └── Helpers/
-        ├── AssetLoader.swift           # Carrega modelos RealityKit (@EnvironmentObject)
-        ├── AppColors.swift             # Constantes de cor (SwiftUI Color)
-        └── FontInitializer.swift       # Inicialização de fontes customizadas
+    ├── Helpers/
+    │   ├── AssetLoader.swift           # Carrega modelos RealityKit (@Observable, injetado via .environment)
+    │   ├── ExperienceModel.swift       # visionOS: estado compartilhado da experiência (@Observable)
+    │   ├── AppColors.swift             # Constantes de cor (SwiftUI Color)
+    │   ├── StartTheme.swift            # StartPalette, AppLayout, AppFonts
+    │   ├── FontInitializer.swift       # Registro de fontes customizadas
+    │   └── OverlayType+Color.swift     # Extensão de cor (SwiftUI) para OverlayType do Core
+    │
+    └── Resources/                      ← Modelos .usdz (partículas + variantes "Pulsing") e fontes .ttf
 ```
 
 ---
@@ -92,13 +110,13 @@ QuantumCore/
                      │ import Core
 ┌────────────────────▼────────────────────────┐
 │  ViewModels (app target)                    │
-│  @MainActor ObservableObject                │
+│  @MainActor @Observable                     │
 │  AtomViewModel, NucleusViewModel,           │
 │  DeviceScreenViewModel                      │
 │  → Detém lógica de negócio, diálogos,       │
 │    transições de estado, callbacks          │
 └────────────────────┬────────────────────────┘
-                     │ @StateObject / @ObservedObject
+                     │ @State / .environment
 ┌────────────────────▼────────────────────────┐
 │  Views (app target)                         │
 │  SwiftUI + RealityKit                       │
@@ -111,7 +129,7 @@ QuantumCore/
 ### Fluxo de dados
 
 - **Gestos** → View detecta → chama método no ViewModel
-- **Estado** → ViewModel muta → View observa via `@Published`
+- **Estado** → ViewModel muta → View observa via `@Observable` (Observation)
 - **Energia** → ViewModel dispara callback `onEnergyGained` → View incrementa `@Binding`
 - **Diálogo** → ViewModel cria `DialogueSequence` (Core) → `DialogueManager` executa → View observa `isShowingDialogue`
 - **Entidades RealityKit** → sempre `@State` na View; ViewModel nunca toca em `Entity`
@@ -123,7 +141,7 @@ QuantumCore/
 1. **Nenhuma lógica de negócio em Views.** Views só renderizam e repassam eventos.
 2. **Core não importa SwiftUI nem RealityKit.** Se precisar de `Color`, crie uma extensão no app target.
 3. **Entidades RealityKit ficam na View** como `@State`. ViewModels nunca referenciam `Entity`.
-4. **`DialogueSequence` e `DialogueEngine` são do Core.** `DialogueManager` é só o wrapper `@Published`.
+4. **`DialogueSequence` e `DialogueEngine` são do Core.** `DialogueManager` é só o wrapper `@Observable`.
 5. **Transições de `ExperienceState` passam pelo ViewModel** via `setExperienceState(_:)` — nunca mutadas diretamente na View.
 6. **Energia (`coreEnergy`) é um `@Binding` do pai.** ViewModels disparam `onEnergyGained?()` e nunca tocam no binding diretamente.
 7. **Um passo de cada vez.** Cada mudança deve deixar o projeto compilando antes de avançar.

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7AC916CE2FDDEB1C00821428 /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 7AC916CD2FDDEB1C00821428 /* Core */; };
+		7AC916D22FDDEB1C00821428 /* QuantumScenes in Frameworks */ = {isa = PBXBuildFile; productRef = 7AC916D12FDDEB1C00821428 /* QuantumScenes */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7AC916CE2FDDEB1C00821428 /* Core in Frameworks */,
+				7AC916D22FDDEB1C00821428 /* QuantumScenes in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,6 +128,7 @@
 			name = QuantumCore;
 			packageProductDependencies = (
 				7AC916CD2FDDEB1C00821428 /* Core */,
+				7AC916D12FDDEB1C00821428 /* QuantumScenes */,
 			);
 			productName = QuantumCore;
 			productReference = 7AC915B12FDDDF1200821428 /* QuantumCore.app */;
@@ -211,6 +214,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				7AC916CB2FDDEAE400821428 /* XCLocalSwiftPackageReference "Core" */,
+				7AC916D02FDDEB1C00821428 /* XCLocalSwiftPackageReference "../../Developer/QuantumScenes" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7AC915B22FDDDF1200821428 /* Products */;
@@ -613,6 +617,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Core;
 		};
+		7AC916D02FDDEB1C00821428 /* XCLocalSwiftPackageReference "../../Developer/QuantumScenes" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Developer/QuantumScenes;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -620,6 +628,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7AC916CB2FDDEAE400821428 /* XCLocalSwiftPackageReference "Core" */;
 			productName = Core;
+		};
+		7AC916D12FDDEB1C00821428 /* QuantumScenes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AC916D02FDDEB1C00821428 /* XCLocalSwiftPackageReference "../../Developer/QuantumScenes" */;
+			productName = QuantumScenes;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

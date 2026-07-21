@@ -7,6 +7,7 @@
 
 import SwiftUI
 import RealityKit
+import QuantumScenes
 
 @MainActor
 @Observable
@@ -35,12 +36,14 @@ final class AssetLoader {
         do {
             async let background = Entity(named: "Background")
 
-            async let atom = Entity(named: "Atom")
+            // Cena do RCP (pacote QuantumScenes); as demais ainda vêm dos .usdz do Resources.
+            // Cenas em subpastas do .rkassets são endereçadas como "Pasta/Cena".
+            async let atom = Entity(named: "Atomo/Atomo", in: quantumScenesBundle)
 
-            async let electron = Entity(named: "Electron")
+            async let electron = Entity(named: "Eletron/Eletron", in: quantumScenesBundle)
             async let electronPulsing = Entity(named: "ElectronPulsing")
-            
-            async let photon = Entity(named: "Photon")
+
+            async let photon = Entity(named: "Foton/Foton", in: quantumScenesBundle)
             async let photonPulsing = Entity(named: "PhotonPulsing")
             
             async let protonQuarks = Entity(named: "ProtonQuarks")
