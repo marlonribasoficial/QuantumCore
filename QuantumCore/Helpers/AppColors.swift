@@ -73,4 +73,11 @@ enum AppColors {
         green: 61.0 / 255.0,
         blue: 255.0 / 255.0
     )
+
+    /// Fundo da câmara do núcleo — branco gelo (branco frio, levemente azulado).
+    static let iceWhite = Color(
+        red: 237.0 / 255.0,
+        green: 244.0 / 255.0,
+        blue: 247.0 / 255.0
+    )
 }

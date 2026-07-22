@@ -16,11 +16,19 @@ struct NucleusView: View {
     @State private var vm: NucleusViewModel
 
     // MARK: - Entities (ficam na View — objetos de referência do RealityKit)
-    @State private var protonQuarks: Entity?
-    @State private var quarks: Entity?
+    // Cena Nucleon (RCP): quarks são 3 entidades de topo (QuarkDown, QuarkUp,
+    // QuarkDownToUp), glúons em `gluon_conexoes`, e o bóson W fica aninhado dentro
+    // do QuarkDownToUp (é ele que medeia a transformação down→up).
+    @State private var nucleon: Entity?
+    @State private var quarkEntities: [Entity] = []
     @State private var gluons: Entity?
-    @State private var upTransforming: Entity?
+    @State private var downToUp: Entity?
     @State private var wBoson: Entity?
+
+    // Entidades que só existem a partir da transformação (bóson W + o quark up que
+    // ele revela). Ficam desativadas no idle: o bóson W tem halos transparentes/
+    // emissivos que causam overdraw pesado no simulador (render por software).
+    @State private var transformOnlyEntities: [Entity] = []
 
     // MARK: - Bindings do pai
     @Binding var coreEnergy: Int
@@ -40,17 +48,32 @@ struct NucleusView: View {
     var body: some View {
         ZStack {
             RealityView { content in
-                let loaded = loader.protonQuarks.clone(recursive: true)
+                let loaded = loader.nucleon.clone(recursive: true)
 
-                loaded.scale = .init(repeating: 0.16)
+                loaded.scale = .init(repeating: 0.45)
 
                 content.add(loaded)
-                protonQuarks = loaded
+                nucleon = loaded
 
-                quarks = loaded.findEntity(named: "Quarks")
-                gluons = loaded.findEntity(named: "Gluons")
-                wBoson = loaded.findEntity(named: "BosonW")
-                upTransforming = loaded.findEntity(named: "Up_transforming")
+                // A cena vem com wrappers "Root" aninhados; ancorar no `gluon_conexoes`
+                // (nome único) e usar seus irmãos evita pegar os quarks aninhados dentro
+                // do QuarkDownToUp por engano.
+                gluons = loaded.findEntity(named: "gluon_conexoes")
+                let container = gluons?.parent ?? loaded
+                let quarkNames: Set<String> = ["QuarkDown", "QuarkUp", "QuarkDownToUp"]
+                quarkEntities = container.children.filter { quarkNames.contains($0.name) }
+                downToUp = container.children.first { $0.name == "QuarkDownToUp" }
+                wBoson = downToUp?.findEntity(named: "BosonW")
+
+                // O bóson W e o quark up (aninhados no QuarkDownToUp) só aparecem na
+                // transformação — desativa no idle para não renderizar os halos
+                // transparentes do W (overdraw que trava o simulador).
+                transformOnlyEntities = [wBoson, downToUp?.findEntity(named: "QuarkUp")].compactMap { $0 }
+                for entity in transformOnlyEntities { entity.isEnabled = false }
+
+                // Idle: Jitter em loop em todos os quarks/bóson. A timeline ToUp
+                // (transformação) NÃO roda no idle — é disparada em triggerTransformation.
+                playJitterLoops(from: loaded)
 
                 vm.syncInteractionState(from: experienceState)
                 applyInteractionState()
@@ -59,7 +82,7 @@ struct NucleusView: View {
             .simultaneousGesture(dragGesture)
             #if !os(visionOS)
             .ignoresSafeArea()
-            .background(AppColors.proton)
+            .background(AppColors.iceWhite)
             #endif
 
             if let text = vm.interactionText {
@@ -124,7 +147,17 @@ private extension NucleusView {
     func handleTapInteraction(at value: EntityTargetValue<SpatialTapGesture.Value>) {
         let tappedEntity = value.entity
 
-        if let quarks, tappedEntity.isDescendant(of: quarks) {
+        // O bóson W é descendente do QuarkDownToUp (um quark), então precisa ser
+        // testado antes dos quarks. Cada ramo é fechado pelo estado de interação.
+        if vm.interactionState.canInteractWithWBoson,
+           let wBoson, tappedEntity.isDescendant(of: wBoson) {
+            vm.interactionText = nil
+            vm.startwBosonScriptDialogue()
+            return
+        }
+
+        if vm.interactionState.canInteractWithQuarks,
+           quarkEntities.contains(where: { tappedEntity.isDescendant(of: $0) }) {
             if experienceState == .insideProton {
                 vm.interactionText = nil
                 vm.onExperienceStateChange?(.quarks)
@@ -133,26 +166,21 @@ private extension NucleusView {
             return
         }
 
-        if let gluons, tappedEntity.isDescendant(of: gluons) {
+        if vm.interactionState.canInteractWithGluons,
+           let gluons, tappedEntity.isDescendant(of: gluons) {
             vm.interactionText = nil
             vm.startGluonsDialogue()
-            return
-        }
-
-        if let wBoson, tappedEntity.isDescendant(of: wBoson) {
-            vm.interactionText = nil
-            vm.startwBosonScriptDialogue()
             return
         }
     }
 
     func rotate(translation: CGSize) {
-        guard let protonQuarks else { return }
+        guard let nucleon else { return }
         let dx = Float(translation.width) * 0.0005
         let dy = Float(translation.height) * 0.0005
         let qx = simd_quatf(angle: dy, axis: [1,0,0])
         let qy = simd_quatf(angle: dx, axis: [0,1,0])
-        protonQuarks.transform.rotation = qy * qx * protonQuarks.transform.rotation
+        nucleon.transform.rotation = qy * qx * nucleon.transform.rotation
     }
 }
 
@@ -187,7 +215,12 @@ private extension NucleusView {
     }
 
     func applyInteractionState() {
-        if let quarks { quarks.setInteractivity(enabled: vm.interactionState.canInteractWithQuarks) }
+        // Ordem importa: quarks primeiro, wBoson por último. Como o wBoson é
+        // descendente do QuarkDownToUp, ativá-lo por último garante que o alvo de
+        // input dele não seja removido ao desativar os quarks.
+        for quark in quarkEntities {
+            quark.setInteractivity(enabled: vm.interactionState.canInteractWithQuarks)
+        }
         if let gluons { gluons.setInteractivity(enabled: vm.interactionState.canInteractWithGluons) }
         if let wBoson { wBoson.setInteractivity(enabled: vm.interactionState.canInteractWithWBoson) }
     }
@@ -200,33 +233,43 @@ private extension NucleusView {
         guard !vm.animationPlayed else { return }
         vm.animationPlayed = true
 
-        if let quarks, let animation = quarks.availableAnimations.first {
-            quarks.playAnimation(animation)
+        // Reativa o bóson W e o quark up — a partir daqui a timeline ToUp os revela.
+        // Rejoga o Jitter deles em loop (o loop era feito pela notificação loopJitter
+        // da cena, removida por causar cascata de playbacks — agora é só via código).
+        for entity in transformOnlyEntities {
+            entity.isEnabled = true
+            playJitterLoops(from: entity)
         }
 
-        Task {
-            try? await Task.sleep(for: .seconds(2.0))
-            if let upTransforming { changeParticleColor(entity: upTransforming) }
-        }
+        // A transformação down→up (com o bóson W) é a timeline "ToUp" montada no RCP,
+        // one-shot (sem loop). O Jitter idle segue rodando por baixo.
+        playOneShot(keySuffix: "ToUp", on: downToUp)
+    }
+}
 
-        if let wBoson, let animation = wBoson.availableAnimations.first {
-            wBoson.playAnimation(animation)
+// MARK: - RCP Timelines
+private extension NucleusView {
+
+    /// Toca em loop as timelines "Jitter" (idle) de toda a hierarquia, ignorando a
+    /// timeline "ToUp" (transformação), que é disparada só quando o quark decai.
+    func playJitterLoops(from entity: Entity) {
+        if let library = entity.components[AnimationLibraryComponent.self] {
+            for (key, resource) in library.animations
+            where key.hasSuffix("Jitter__auto_generated_looping") {
+                entity.playAnimation(resource.repeat())
+            }
+        }
+        for child in entity.children {
+            playJitterLoops(from: child)
         }
     }
 
-    func changeParticleColor(entity: Entity) {
-        guard let modelEntity = entity as? ModelEntity ??
-                entity.findEntity(named: "") as? ModelEntity ??
-                entity.children.first(where: { $0 is ModelEntity }) as? ModelEntity else { return }
-
-        var material = PhysicallyBasedMaterial()
-        #if os(iOS)
-        material.baseColor = .init(tint: UIColor(red: 0.7, green: 0.3, blue: 0.8, alpha: 1.0))
-        #else
-        material.baseColor = .init(tint: .init(red: 0.7, green: 0.3, blue: 0.8, alpha: 1.0))
-        #endif
-        material.roughness = 0.5
-        material.metallic = 0.1
-        modelEntity.model?.materials = [material]
+    /// Toca uma vez (sem loop) a timeline cujo nome termina em `keySuffix`.
+    func playOneShot(keySuffix: String, on entity: Entity?) {
+        guard let entity,
+              let library = entity.components[AnimationLibraryComponent.self] else { return }
+        for (key, resource) in library.animations where key.hasSuffix(keySuffix) {
+            entity.playAnimation(resource)
+        }
     }
 }

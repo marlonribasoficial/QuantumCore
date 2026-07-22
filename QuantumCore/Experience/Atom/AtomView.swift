@@ -380,7 +380,7 @@ private extension AtomView {
             vm.scaleBeforeNucleus = vm.currentScale
 
             Task {
-                await animateZoom(to: 1500.0, duration: 1.5)
+                await animateZoom(to: 1900.0, duration: 3.0)
                 await MainActor.run {
                     vm.setExperienceState(.insideProton)
                 }

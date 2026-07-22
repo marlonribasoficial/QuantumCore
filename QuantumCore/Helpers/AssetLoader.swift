@@ -23,7 +23,7 @@ final class AssetLoader {
     @ObservationIgnored var electronPulsing: Entity!
     @ObservationIgnored var photon: Entity!
     @ObservationIgnored var photonPulsing: Entity!
-    @ObservationIgnored var protonQuarks: Entity!
+    @ObservationIgnored var nucleon: Entity!
     @ObservationIgnored var quarksPulsing: Entity!
     @ObservationIgnored var gluonsPulsing: Entity!
     @ObservationIgnored var wBoson: Entity!
@@ -46,7 +46,7 @@ final class AssetLoader {
             async let photon = Entity(named: "Foton/Foton", in: quantumScenesBundle)
             async let photonPulsing = Entity(named: "PhotonPulsing")
             
-            async let protonQuarks = Entity(named: "ProtonQuarks")
+            async let nucleon = Entity(named: "Nucleon/Nucleon", in: quantumScenesBundle)
             async let quarksPulsing = Entity(named: "QuarksPulsing")
 
             async let gluonsPulsing = Entity(named: "GluonPulsing")
@@ -64,7 +64,7 @@ final class AssetLoader {
             self.electronPulsing = try await electronPulsing
             self.photon = try await photon
             self.photonPulsing = try await photonPulsing
-            self.protonQuarks = try await protonQuarks
+            self.nucleon = try await nucleon
             self.quarksPulsing = try await quarksPulsing
             self.gluonsPulsing = try await gluonsPulsing
             self.wBoson = try await wBoson

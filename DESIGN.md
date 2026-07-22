@@ -131,7 +131,8 @@ Loop total da timeline: **~3,4s**.
   - **Reality Converter** para opacos simples: núcleo, quarks, Z.
   - **Up-axis Y:** no export USD do Blender, ativar **Convert Orientation** com **Forward −Z / Up Y** — o padrão do Blender (Z-up) dispara warning de referência no RCP em toda cena. Reality Converter (GLB→USDZ) não precisa: GLB já é Y-up. *Os 4 usdc existentes foram normalizados Z→Y em 2026-07-21 (só metadado, geometria intacta; backups em `QuantumScenes/backup-usdc-zup/`).*
 - **Loop:** RCP desta versão **não tem toggle de loop** → feito por código.
-- **Sem behaviors de "Play Timeline":** as cenas ficam só com a timeline, **sem** `OnAddedToScene` — o app dispara tudo por código com a variante `__auto_generated_looping` (ver `playAllTimelines` no `AtomView`). Behavior de play toca a timeline **uma vez** e atropela o loop do código. O RCP mostra um ⚠️ na cena por causa da timeline sem trigger — é esperado e inofensivo.
+- **Sem behaviors de "Play Timeline":** as cenas ficam só com a timeline, **sem** `OnAddedToScene` — o app dispara tudo por código com a variante `__auto_generated_looping` (ver `playAllTimelines`/`playJitterLoops`). Behavior de play toca a timeline **uma vez** e atropela o loop do código. O RCP mostra um ⚠️ na cena por causa da timeline sem trigger — é esperado e inofensivo.
+- **Nada de loop por notificação (`loopJitter` & cia):** o padrão RCP de "timeline posta notificação → `OnNotification` re-toca a timeline" cria um loop que, somado ao `.repeat()` do código, **empilha playbacks e trava tudo** (foi a causa do freeze no decaimento). Não use `OnNotification`/`actionKind = "notification"` para loopar; o loop é sempre `.repeat()` no código. Removido de `QuarkUp.usda` e `BosonW.usda` em 2026-07-22 — se reexportar essas cenas do RCP, apague de novo o comportamento `OnNotification`.
 
 ### Carregar e rodar em loop (RealityKit)
 
