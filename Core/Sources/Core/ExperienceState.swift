@@ -34,7 +34,8 @@ public enum ExperienceState: Sendable {
              .gluonsInteracted,
              .quarkTransforming,
              .wBosonSpawned,
-             .wBosonInteracted:
+             .wBosonInteracted,
+             .leavingNucleus:  // NucleusView continua visível enquanto o núcleo dá zoom out
             return true
         default:
             return false

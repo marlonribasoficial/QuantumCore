@@ -114,7 +114,7 @@ final class NucleusViewModel: SystemFeedbackPresenting {
             id: "wBosonScript_script",
             messages: Scripts.wBosonScript,
             onFinish: { [weak self] in
-                self?.presentSystemFeedback(type: .wBoson, nextState: .zoomingOutFromNucleus)
+                self?.presentSystemFeedback(type: .wBoson, nextState: .leavingNucleus)
             }
         )
         dialogueManager.startDialogue(sequence)

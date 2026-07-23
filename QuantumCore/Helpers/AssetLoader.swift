@@ -20,17 +20,18 @@ final class AssetLoader {
     @ObservationIgnored var background: Entity!
     @ObservationIgnored var atom: Entity!
     @ObservationIgnored var electron: Entity!
-    @ObservationIgnored var electronPulsing: Entity!
     @ObservationIgnored var photon: Entity!
-    @ObservationIgnored var photonPulsing: Entity!
     @ObservationIgnored var nucleon: Entity!
-    @ObservationIgnored var quarksPulsing: Entity!
-    @ObservationIgnored var gluonsPulsing: Entity!
     @ObservationIgnored var wBoson: Entity!
-    @ObservationIgnored var wBosonPulsing: Entity!
     @ObservationIgnored var particles: Entity!
     @ObservationIgnored var zBoson: Entity!
-    @ObservationIgnored var zBosonPulsing: Entity!
+
+    // Cenas do RCP usadas nos cards de partícula (ParticlePanel).
+    // Elétron e fóton reaproveitam `electron`/`photon` (mesmas cenas do átomo).
+    @ObservationIgnored var quarksScene: Entity!
+    @ObservationIgnored var gluonScene: Entity!
+    @ObservationIgnored var bosonWScene: Entity!
+    @ObservationIgnored var bosonZScene: Entity!
     
     func loadAllAssets() async {
         do {
@@ -41,38 +42,32 @@ final class AssetLoader {
             async let atom = Entity(named: "Atomo/Atomo", in: quantumScenesBundle)
 
             async let electron = Entity(named: "Eletron/Eletron", in: quantumScenesBundle)
-            async let electronPulsing = Entity(named: "ElectronPulsing")
-
             async let photon = Entity(named: "Foton/Foton", in: quantumScenesBundle)
-            async let photonPulsing = Entity(named: "PhotonPulsing")
-            
             async let nucleon = Entity(named: "Nucleon/Nucleon", in: quantumScenesBundle)
-            async let quarksPulsing = Entity(named: "QuarksPulsing")
 
-            async let gluonsPulsing = Entity(named: "GluonPulsing")
-            
             async let wBoson = Entity(named: "wBoson")
-            async let wBosonPulsing = Entity(named: "wBosonPulsing")
-            
             async let particles = Entity(named: "Particles")
             async let zBoson = Entity(named: "zBoson")
-            async let zBosonPulsing = Entity(named: "zBosonPulsing")
+
+            // Cenas do RCP para os cards
+            async let quarksScene = Entity(named: "Quarks/Quarks", in: quantumScenesBundle)
+            async let gluonScene = Entity(named: "Gluon/Gluon", in: quantumScenesBundle)
+            async let bosonWScene = Entity(named: "BosonW/BosonW", in: quantumScenesBundle)
+            async let bosonZScene = Entity(named: "BosonZ/BosonZ", in: quantumScenesBundle)
 
             self.background = try await background
             self.atom = try await atom
             self.electron = try await electron
-            self.electronPulsing = try await electronPulsing
             self.photon = try await photon
-            self.photonPulsing = try await photonPulsing
             self.nucleon = try await nucleon
-            self.quarksPulsing = try await quarksPulsing
-            self.gluonsPulsing = try await gluonsPulsing
             self.wBoson = try await wBoson
-            self.wBosonPulsing = try await wBosonPulsing
             self.particles = try await particles
             self.zBoson = try await zBoson
-            self.zBosonPulsing = try await zBosonPulsing
-            
+            self.quarksScene = try await quarksScene
+            self.gluonScene = try await gluonScene
+            self.bosonWScene = try await bosonWScene
+            self.bosonZScene = try await bosonZScene
+
             isLoaded = true
             
         } catch {

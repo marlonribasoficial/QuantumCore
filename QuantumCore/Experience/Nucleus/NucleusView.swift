@@ -209,8 +209,30 @@ private extension NucleusView {
                 vm.startProtonQuarkTransformedDialogue()
             }
 
+        case .leavingNucleus:
+            zoomOutNucleon()
+
         default:
             break
+        }
+    }
+
+    /// Afasta o núcleo (zoom out da cena do núcleo) e, ao terminar, entrega para o
+    /// átomo continuar o zoom out (troca para `.zoomingOutFromNucleus`).
+    func zoomOutNucleon() {
+        guard let nucleon else {
+            vm.onExperienceStateChange?(.zoomingOutFromNucleus)
+            return
+        }
+
+        let duration: TimeInterval = 1.1
+        var target = nucleon.transform
+        target.scale = .one * 0.12  // recua o núcleo para longe antes da troca de cena
+        nucleon.move(to: target, relativeTo: nucleon.parent, duration: duration, timingFunction: .easeIn)
+
+        Task {
+            try? await Task.sleep(for: .seconds(duration))
+            vm.onExperienceStateChange?(.zoomingOutFromNucleus)
         }
     }
 

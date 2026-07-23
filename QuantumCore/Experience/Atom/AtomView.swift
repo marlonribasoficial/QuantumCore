@@ -65,6 +65,8 @@ struct AtomView: View {
 
             uiLayer
         }
+        // Crossfade entre a cena do núcleo e a do átomo (encadeia os dois zoom outs).
+        .animation(.easeInOut(duration: 0.6), value: vm.experienceState.isInsideNucleus)
         #if os(visionOS)
         .ornament(
             visibility: vm.dialogueManager.isShowingDialogue ? .visible : .hidden,
@@ -380,7 +382,7 @@ private extension AtomView {
             vm.scaleBeforeNucleus = vm.currentScale
 
             Task {
-                await animateZoom(to: 1900.0, duration: 3.0)
+                await animateZoom(to: 1270.0, duration: 3.0)
                 await MainActor.run {
                     vm.setExperienceState(.insideProton)
                 }

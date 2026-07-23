@@ -71,23 +71,27 @@ struct ParticlePanel: View {
 
     private func modelPane(size: CGFloat) -> some View {
         RealityView { content in
-            var loadedModel: Entity?
-
+            // Todas as cenas vêm do RCP (com todas as timelines).
+            let model: Entity
             switch type {
-            case .electron: loadedModel = loader.electronPulsing.clone(recursive: true)
-            case .photon:   loadedModel = loader.photonPulsing.clone(recursive: true)
-            case .quarks:   loadedModel = loader.quarksPulsing.clone(recursive: true)
-            case .gluons:   loadedModel = loader.gluonsPulsing.clone(recursive: true)
-            case .wBoson:   loadedModel = loader.wBosonPulsing.clone(recursive: true)
-            case .zBoson:   loadedModel = loader.zBosonPulsing.clone(recursive: true)
+            case .electron: model = loader.electron.clone(recursive: true)
+            case .photon:   model = loader.photon.clone(recursive: true)
+            case .quarks:   model = loader.quarksScene.clone(recursive: true)
+            case .gluons:   model = loader.gluonScene.clone(recursive: true)
+            case .wBoson:   model = loader.bosonWScene.clone(recursive: true)
+            case .zBoson:   model = loader.bosonZScene.clone(recursive: true)
             }
 
-            guard let model = loadedModel else { return }
-            model.scale = .one * (type == .quarks ? 0.3 : 0.6)
+            // Normaliza pelo maior lado para caber no card no mesmo tamanho de antes
+            // (não-quarks ~1.2, quarks ~1.8), independente da escala da cena.
+            let target: Float = (type == .quarks) ? 1.8 : 1.2
+            let extents = model.visualBounds(relativeTo: nil).extents
+            let maxDim = max(extents.x, extents.y, extents.z)
+            if maxDim > 0 { model.scale = .one * (target / maxDim) }
 
-            if let animation = model.availableAnimations.first {
-                model.playAnimation(animation.repeat())
-            }
+            // Aciona TODAS as timelines da cena, em loop.
+            playAllTimelines(from: model)
+
             content.add(model)
         }
         .background(
@@ -114,6 +118,34 @@ struct ParticlePanel: View {
             .allowsHitTesting(false)
         )
         .accessibilityHidden(true)
+    }
+
+    /// Toca em loop a variante de loop de toda timeline da cena, em qualquer nível
+    /// da hierarquia (cenas do RCP podem ter várias timelines, inclusive em
+    /// sub-entidades referenciadas, como os quarks dentro de Quarks).
+    ///
+    /// Quando uma mesma entidade tem várias timelines (ex.: Eletron tem Jitter +
+    /// Opacidade), elas são agrupadas — senão o segundo `playAnimation` substituiria
+    /// o primeiro e só uma tocaria.
+    private func playAllTimelines(from entity: Entity) {
+        if let library = entity.components[AnimationLibraryComponent.self] {
+            let loops = library.animations
+                .filter { $0.key.hasSuffix("__auto_generated_looping") }
+                .map { $0.value }
+
+            if loops.count == 1 {
+                entity.playAnimation(loops[0].repeat())
+            } else if loops.count > 1 {
+                if let group = try? AnimationResource.group(with: loops) {
+                    entity.playAnimation(group)
+                } else {
+                    loops.forEach { entity.playAnimation($0.repeat()) }
+                }
+            }
+        }
+        for child in entity.children {
+            playAllTimelines(from: child)
+        }
     }
 
     // MARK: - Painel de dados

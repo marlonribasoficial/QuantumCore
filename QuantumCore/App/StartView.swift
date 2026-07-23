@@ -18,10 +18,6 @@ struct StartView: View {
     @State private var started = false
     @State private var aboutOpen = false
 
-    // Persistência: disponível depois para personalizar a fala do Max.
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("userNote") private var userNote = ""
-
     /// Fundo fixo em GRID (preferido). Estruturado para trocar facilmente.
     private let backgroundStyle: StartBackgroundStyle = .grid
 
@@ -41,35 +37,22 @@ struct StartView: View {
                 ZStack {
                     StartBackground(style: backgroundStyle)
 
-                    // Título + botão primário, centralizados.
+                    // Título + subtítulo + botões, centralizados.
                     VStack(spacing: 30 * scale) {
                         titleBlock(scale: scale)
-                        LookInsideButton(scale: scale, action: start)
+
+                        VStack(spacing: 14 * scale) {
+                            LookInsideButton(scale: scale, action: start)
+                            aboutMeButton(scale: scale)
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    // ABOUT ME — canto superior direito.
-                    aboutMeButton(scale: scale)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity,
-                               alignment: .topTrailing)
-                        .padding(.top, 16 * scale)
-                        .padding(.trailing, 18 * scale)
-
-                    // Modal ABOUT YOU.
+                    // Modal ABOUT.
                     if aboutOpen {
-                        AboutYouSheet(
-                            scale: scale,
-                            initialName: userName,
-                            initialNote: userNote,
-                            onSave: { name, note in
-                                userName = name
-                                userNote = note
-                                closeAbout()
-                            },
-                            onClose: closeAbout
-                        )
-                        .transition(.opacity)
-                        .zIndex(10)
+                        AboutSheet(scale: scale, onClose: closeAbout)
+                            .transition(.opacity)
+                            .zIndex(10)
                     }
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
@@ -89,29 +72,41 @@ struct StartView: View {
     // MARK: Título "QUANTUM / CORE"
 
     private func titleBlock(scale: CGFloat) -> some View {
-        VStack(spacing: -10 * scale) {
-            titleLine("QUANTUM", scale: scale)
-            titleLine("CORE", scale: scale)
+        VStack(spacing: 14 * scale) {
+            VStack(spacing: 6 * scale) {
+                titleLine("QUANTUM", scale: scale)
+                titleLine("CORE", scale: scale)
+            }
+            subtitle(scale: scale)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Quantum Core")
+        .accessibilityLabel("Quantum Core. Inside the Atom.")
         .accessibilityAddTraits(.isHeader)
         .modifier(TitleEntrance())
     }
 
     private func titleLine(_ text: String, scale: CGFloat) -> some View {
-        ZStack {
+        // Press Start 2P é bem mais largo que a fonte anterior, então o corpo é menor.
+        let size = 56 * scale
+        return ZStack {
             // Sombra pixel (offset sólido).
             Text(text)
-                .font(.custom(AppFonts.title, size: 82 * scale))
-                .tracking(2.46 * scale)
+                .font(.custom(AppFonts.button, size: size))
                 .foregroundStyle(Color.black.opacity(0.5))
                 .offset(y: 3 * scale)
             Text(text)
-                .font(.custom(AppFonts.title, size: 82 * scale))
-                .tracking(2.46 * scale)
+                .font(.custom(AppFonts.button, size: size))
                 .foregroundStyle(StartPalette.cream)
         }
+    }
+
+    // MARK: Subtítulo "INSIDE THE ATOM" (San Francisco ultraLight, espaçado)
+
+    private func subtitle(scale: CGFloat) -> some View {
+        Text("INSIDE THE ATOM")
+            .font(.system(size: 20 * scale, weight: .ultraLight))
+            .tracking(6 * scale)
+            .foregroundStyle(StartPalette.cream.opacity(0.72))
     }
 
     // MARK: Botão ABOUT ME

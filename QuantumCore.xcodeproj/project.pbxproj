@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A3210013011C54B00FFA7E1 /* QuantumCoreIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7A3210003011C54B00FFA7E1 /* QuantumCoreIcon.icon */; };
 		7AC916CE2FDDEB1C00821428 /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 7AC916CD2FDDEB1C00821428 /* Core */; };
 		7AC916D22FDDEB1C00821428 /* QuantumScenes in Frameworks */ = {isa = PBXBuildFile; productRef = 7AC916D12FDDEB1C00821428 /* QuantumScenes */; };
 /* End PBXBuildFile section */
@@ -29,6 +30,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7A3210003011C54B00FFA7E1 /* QuantumCoreIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = QuantumCoreIcon.icon; sourceTree = "<group>"; };
 		7AC915B12FDDDF1200821428 /* QuantumCore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuantumCore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AC915BE2FDDDF1200821428 /* QuantumCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuantumCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AC915C82FDDDF1200821428 /* QuantumCoreUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuantumCoreUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -87,6 +89,7 @@
 				7AC915CB2FDDDF1200821428 /* QuantumCoreUITests */,
 				7AC916CC2FDDEB1C00821428 /* Frameworks */,
 				7AC915B22FDDDF1200821428 /* Products */,
+				7A3210003011C54B00FFA7E1 /* QuantumCoreIcon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -233,6 +236,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A3210013011C54B00FFA7E1 /* QuantumCoreIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -416,7 +420,7 @@
 		7AC915D32FDDDF1200821428 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = QuantumCoreIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -424,6 +428,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.educational-games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -453,7 +458,7 @@
 		7AC915D42FDDDF1200821428 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = QuantumCoreIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -461,6 +466,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.educational-games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
