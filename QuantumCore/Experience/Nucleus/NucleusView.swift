@@ -117,6 +117,12 @@ struct NucleusView: View {
         .onAppear {
             vm.onEnergyGained = { coreEnergy += EnergyReward.particleInteraction }
             vm.onExperienceStateChange = { newState in experienceState = newState }
+
+            // Ao chegar no núcleo, espera um instante e dispara o quarksScript.
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                vm.quarksIntroDialogue()
+            }
         }
         .onChange(of: experienceState) { _, newState in
             vm.syncInteractionState(from: newState)
@@ -145,6 +151,9 @@ private extension NucleusView {
     }
 
     func handleTapInteraction(at value: EntityTargetValue<SpatialTapGesture.Value>) {
+        // Durante um diálogo, nenhuma interação com partícula é permitida.
+        guard !dialogueManager.isShowingDialogue else { return }
+
         let tappedEntity = value.entity
 
         // O bóson W é descendente do QuarkDownToUp (um quark), então precisa ser
@@ -205,7 +214,7 @@ private extension NucleusView {
         case .quarkTransforming:
             Task {
                 triggerTransformation()
-                try? await Task.sleep(for: .seconds(3.0))
+                try? await Task.sleep(for: .seconds(6.0))
                 vm.startProtonQuarkTransformedDialogue()
             }
 

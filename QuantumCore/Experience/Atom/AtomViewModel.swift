@@ -98,12 +98,28 @@ final class AtomViewModel: SystemFeedbackPresenting {
         dialogueManager.startDialogue(sequence)
     }
 
+    /// Descoberta: toca quando a pessoa toca na eletrosfera e o elétron spawna
+    /// (ainda sem card). Ao terminar, mostra a dica de coletar o elétron.
+    func electronSpawnedDialogue() {
+        withAnimation(.spring()) { selectedOverlay = nil }
+
+        let sequence = DialogueSequence(
+            id: "electronSpawned_script",
+            messages: Scripts.electronScript,
+            onFinish: { [weak self] in
+                self?.interactionText = .collectElectron
+            }
+        )
+        dialogueManager.startDialogue(sequence)
+    }
+
+    /// Card: toca quando a pessoa toca no elétron — sobe o card e o texto detalhado.
     func startElectronDialogue() {
         withAnimation(.spring()) { selectedOverlay = .electron }
 
         let sequence = DialogueSequence(
             id: "electron_script",
-            messages: Scripts.electronScript,
+            messages: Scripts.electronCard,
             onFinish: { [weak self] in
                 self?.presentSystemFeedback(type: .electron, nextState: .electronInteracted)
             }
@@ -132,7 +148,7 @@ final class AtomViewModel: SystemFeedbackPresenting {
 
         let sequence = DialogueSequence(
             id: "photon_script",
-            messages: Scripts.photonScript,
+            messages: Scripts.photonCard,
             onFinish: { [weak self] in
                 self?.presentSystemFeedback(type: .photon, nextState: .photonInteracted)
             }
@@ -192,7 +208,7 @@ final class AtomViewModel: SystemFeedbackPresenting {
 
         let sequence = DialogueSequence(
             id: "zBoson_script",
-            messages: Scripts.zBosonScript,
+            messages: Scripts.zBosonCard,
             onFinish: { [weak self] in
                 self?.presentSystemFeedback(
                     type: .zBoson,

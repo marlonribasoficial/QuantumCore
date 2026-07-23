@@ -153,22 +153,58 @@ struct ParticlePanel: View {
     private var infoPane: some View {
         VStack(alignment: .leading, spacing: 15) {
             field("NAME", value: cardName, color: StartPalette.cream, big: true)
-            field("CHARGE", value: cardCharge, color: StartPalette.cream, big: false)
+            chargeField
             field("SYSTEM", value: cardSystem, color: cardColor, big: false)
         }
     }
 
     private func field(_ label: String, value: String, color: Color, big: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(2.2)
-                .foregroundStyle(StartPalette.cream.opacity(0.42))
+            fieldLabel(label)
             Text(value)
                 .font(.custom(AppFonts.ui, size: big ? 46 : 30))
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
+        }
+    }
+
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold))
+            .tracking(2.2)
+            .foregroundStyle(StartPalette.cream.opacity(0.42))
+    }
+
+    /// Carga. Nos quarks mostra as duas cargas separadas — o up é +2/3 e o
+    /// down é -1/3 (o nêutron é 1 up + 2 down), não um "±1/3".
+    private var chargeField: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            fieldLabel("CHARGE")
+            if type == .quarks {
+                HStack(alignment: .firstTextBaseline, spacing: 20) {
+                    quarkCharge("UP", "+2/3")
+                    quarkCharge("DOWN", "-1/3")
+                }
+            } else {
+                Text(cardCharge)
+                    .font(.custom(AppFonts.ui, size: 30))
+                    .foregroundStyle(StartPalette.cream)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+        }
+    }
+
+    private func quarkCharge(_ label: String, _ value: String) -> some View {
+        HStack(spacing: 6) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .tracking(1)
+                .foregroundStyle(StartPalette.cream.opacity(0.4))
+            Text(value)
+                .font(.custom(AppFonts.ui, size: 28))
+                .foregroundStyle(StartPalette.cream)
         }
     }
 
@@ -185,11 +221,13 @@ struct ParticlePanel: View {
         }
     }
 
+    // Nos quarks, a carga visível vem de `chargeField` (up +2/3, down -1/3); este
+    // valor é usado só no rótulo de acessibilidade.
     private var cardCharge: String {
         switch type {
         case .electron: return "-1"
         case .photon:   return "0"
-        case .quarks:   return "\u{00B1}1/3"
+        case .quarks:   return "up +2/3, down -1/3"
         case .gluons:   return "0"
         case .wBoson:   return "-1"
         case .zBoson:   return "0"

@@ -8,8 +8,11 @@ final class NucleusViewModel: SystemFeedbackPresenting {
     // MARK: - State
     var selectedOverlay: OverlayType?
     var interactionState: InteractionState = InteractionState()
-    var interactionText: InteractionText? = .collectQuarks
+    // A dica de coletar os quarks só aparece depois que o quarksScript de descoberta
+    // termina (ver quarksIntroDialogue).
+    var interactionText: InteractionText? = nil
     var animationPlayed: Bool = false
+    var quarksIntroPlayed: Bool = false
     var showSystemFeedback: Bool = false
     var feedbackType: OverlayType?
 
@@ -38,12 +41,29 @@ final class NucleusViewModel: SystemFeedbackPresenting {
 
     // MARK: - Dialogue Triggers
 
+    /// Descoberta: toca ao chegar dentro do núcleo (ainda sem card). Ao terminar,
+    /// mostra a dica de coletar os quarks.
+    func quarksIntroDialogue() {
+        guard !quarksIntroPlayed else { return }
+        quarksIntroPlayed = true
+
+        let sequence = DialogueSequence(
+            id: "quarksIntro_script",
+            messages: Scripts.quarksScript,
+            onFinish: { [weak self] in
+                self?.interactionText = .collectQuarks
+            }
+        )
+        dialogueManager.startDialogue(sequence)
+    }
+
+    /// Card: toca ao tocar nos quarks — sobe o card e o texto detalhado.
     func startQuarksDialogue() {
         withAnimation(.spring()) { selectedOverlay = .quarks }
 
         let sequence = DialogueSequence(
             id: "quarks_script",
-            messages: Scripts.quarksScript,
+            messages: Scripts.quarkCard,
             onFinish: { [weak self] in
                 self?.presentSystemFeedback(type: .quarks, nextState: .quarksInteracted)
             }
@@ -71,7 +91,7 @@ final class NucleusViewModel: SystemFeedbackPresenting {
 
         let sequence = DialogueSequence(
             id: "gluons_script",
-            messages: Scripts.gluonScript,
+            messages: Scripts.gluonCard,
             onFinish: { [weak self] in
                 self?.presentSystemFeedback(type: .gluons, nextState: .gluonsInteracted)
             }
@@ -112,7 +132,7 @@ final class NucleusViewModel: SystemFeedbackPresenting {
 
         let sequence = DialogueSequence(
             id: "wBosonScript_script",
-            messages: Scripts.wBosonScript,
+            messages: Scripts.wBosonCard,
             onFinish: { [weak self] in
                 self?.presentSystemFeedback(type: .wBoson, nextState: .leavingNucleus)
             }

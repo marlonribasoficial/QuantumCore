@@ -19,7 +19,9 @@ public enum Scripts {
     public static let systemsScript = [
         "That's the Quantum Core. My central system. The thing keeping me running.",
 
-        "Built the same way as everything else in the universe, actually. Same particles. Same forces. Same pattern. Just... split into different systems, each one fed by a different particle.",
+        "Built the same way as everything else in the universe, actually.",
+        
+        "Same particles. Same forces. Same pattern. Just... split into different systems, each one fed by a different particle.",
 
         "...Truth is, I don't remember all of them anymore. Not clearly. Some part of me went dark along with the power.",
 
@@ -61,9 +63,11 @@ public enum Scripts {
     public static let electronScript = [
         "Wait... I know this feeling.",
 
-        "That's... that's an electron!",
-
-        "This is what lets everything in me flow. Negative charge. Always at the edges, never still.",
+        "That's... that's an electron!"
+    ]
+    
+    public static let electronCard = [
+        "The electron is what lets everything in me flow. Negative charge. Always at the edges, never still.",
 
         "...I remember now. This is what holds my outer shape."
     ]
@@ -74,10 +78,14 @@ public enum Scripts {
         "There it is. A photon."
     ]
 
-    public static let photonScript = [
+    public static let photonCard = [
         "This is the photon. It carries light, but that's only half the story.",
 
-        "It's also why charges pull toward each other, or push apart: the electromagnetic force. The reason the electron out there doesn't just drift into nothing. The same light has been crossing the universe since before there was anyone to see it. ...I remember shining like that."
+        "It's also why charges pull toward each other, or push apart: the electromagnetic force.",
+        
+        "The reason the electron out there doesn't just drift into nothing.",
+        
+        "...I remember shining like that."
     ]
 
     public static let goingToNucleusScript = [
@@ -87,26 +95,32 @@ public enum Scripts {
     public static let lookingToNucleusScript = [
         "This is the nucleus. Small. Dense. It feels like... the deepest part of me.",
 
-        "Protons live here. Neutrons too. I can't tell you which one this is, though, not yet. We'll have to look closer to find out."
+        "Protons live here. Neutrons too. I can't tell you which one this is, though, not yet. We'll have to look closer to find out.",
+        
+        "Let's go deeper!"
     ]
 
     // MARK: - Nucleus Scripts
 
     public static let quarksScript = [
-        "Wait, I know these. Quarks. The particles that build protons and neutrons.",
-
+        "Wait, I know these.",
+        
+        "Quarks! The particles that build protons and neutrons."
+    ]
+    
+    public static let quarkCard = [
         "Two down quarks, one up. That makes this one a neutron.",
 
         "Each piece only carries a fragment of a charge, not a whole one.",
 
-        "...These same quarks build every proton and neutron in the universe. Yours. Mine. Every star that ever burned. Right now, you're holding a piece of everything."
+        "...These same quarks build every proton and neutron in the universe. Yours. Mine. Every star that ever burned."
     ]
 
     public static let gluonDiscoveredScript = [
         "Wait, something's holding these three together. I remember this too."
     ]
 
-    public static let gluonScript = [
+    public static let gluonCard = [
         "The gluon. It carries the strong force: the force that binds quarks together.",
 
         "Here's the strange part: most forces get weaker with distance. This one doesn't.",
@@ -130,7 +144,7 @@ public enum Scripts {
         "Wait... I know this one too."
     ]
 
-    public static let wBosonScript = [
+    public static let wBosonCard = [
         "A W boson. It carries the weak force, the force behind every transformation. Every decay.",
 
         "...I remember becoming, not just being."
@@ -139,7 +153,9 @@ public enum Scripts {
     // MARK: - Back to Electron Shell Scripts
 
     public static let backToShellScript = [
-        "Now, pull back with me for a second. There's something out here I want to show you too.",
+        "Wow... back at the electron shell again",
+        
+        "But there's something out here I want to show you too.",
 
         "Not all weak interactions cause decay.",
 
@@ -148,7 +164,7 @@ public enum Scripts {
         "...I remember this one differently. Quieter."
     ]
 
-    public static let zBosonScript = [
+    public static let zBosonCard = [
         "This is the Z boson. It carries the weak force too, just without the decay. Without the transformation.",
 
         "...Some parts of me never had to become anything else. They just stayed exactly what they were."

@@ -240,6 +240,10 @@ private extension AtomView {
     }
 
     func handleTapInteraction(at value: EntityTargetValue<SpatialTapGesture.Value>) {
+        // Durante um diálogo, nenhuma interação com partícula é permitida
+        // (abrir card, coletar, spawnar) — só depois que a fala termina.
+        guard !vm.dialogueManager.isShowingDialogue else { return }
+
         let tappedEntity = value.entity
 
         if let zBoson, tappedEntity == zBoson || tappedEntity.isDescendant(of: zBoson) {
@@ -255,6 +259,9 @@ private extension AtomView {
         if let electronShell, vm.interactionState.canInteractWithShell, tappedEntity.isDescendant(of: electronShell) {
             if vm.experienceState == .backToShell {
                 if vm.wasParticlesInteracted { return }
+                // O BosonZ já vem dentro da cena ParticlesBosonZ (revelado pela
+                // coreografia ~3,1s). Não há spawn separado — só ativamos a
+                // interação com ele depois que a coreografia o revela.
                 #if os(visionOS)
                 let spawnPosition = tappedEntity.position(relativeTo: nil)
                 vm.wasParticlesInteracted = true
@@ -262,7 +269,7 @@ private extension AtomView {
                     await spawnParticles(at: spawnPosition)
                     vm.interactionText = nil
                     try? await Task.sleep(for: .seconds(3.3))
-                    await spawnZBoson(at: spawnPosition)
+                    vm.setExperienceState(.zBosonSpawned)
                     try? await Task.sleep(for: .seconds(0.5))
                     vm.interactionText = .clickParticle
                 }
@@ -273,7 +280,7 @@ private extension AtomView {
                         await spawnParticles(at: hit.position)
                         vm.interactionText = nil
                         try? await Task.sleep(for: .seconds(3.3))
-                        await spawnZBoson(at: hit.position)
+                        vm.setExperienceState(.zBosonSpawned)
                         try? await Task.sleep(for: .seconds(0.5))
                         vm.interactionText = .clickParticle
                     }
@@ -281,16 +288,18 @@ private extension AtomView {
                 #endif
             } else {
                 if vm.wasElectronSpawned { return }
+                // Limpa a dica "tap the electron shell" ao tocar no shell; a de
+                // coletar o elétron só aparece quando o electronScript termina
+                // (ver electronSpawnedDialogue).
+                vm.interactionText = nil
                 #if os(visionOS)
                 let spawnPosition = tappedEntity.position(relativeTo: nil)
                 vm.wasElectronSpawned = true
                 Task { await spawnElectronEntity(at: spawnPosition) }
-                vm.interactionText = .collectElectron
                 #else
                 if let hit = value.hitTest(point: value.location, in: .local).first {
                     vm.wasElectronSpawned = true
                     Task { await spawnElectronEntity(at: hit.position) }
-                    vm.interactionText = .collectElectron
                 }
                 #endif
             }
@@ -360,13 +369,18 @@ private extension AtomView {
         case .lookingToAtom:
             vm.lookingToAtomScriptDialogue()
 
+        case .electronSpawned:
+            vm.electronSpawnedDialogue()
+
         case .electronInteracted:
+            // Animação de saída do elétron (placeholder — a definitiva virá do RCP).
             if let electron { electron.slideOut(deltaX: 100, deltaY: 10, deltaZ: 3) }
 
             Task {
-                try? await Task.sleep(for: .seconds(0.8))
+                // Ao mesmo tempo que o elétron sai: spawna o fóton com a FotonSpawn
+                // (toca uma vez). Espera a FotonSpawn (~3s) antes do diálogo.
                 await spawnPhotonEntity(at: vm.electronPos)
-                try? await Task.sleep(for: .seconds(2.5))
+                try? await Task.sleep(for: .seconds(3.0))
                 vm.photonFound()
             }
 
@@ -424,10 +438,20 @@ private extension AtomView {
     /// mesma entidade faz a segunda cancelar a primeira.
     func playAllTimelines(from entity: Entity) {
         if let library = entity.components[AnimationLibraryComponent.self] {
-            let animations = Array(library.animations)
-            let looping = animations.filter { $0.key.hasSuffix("__auto_generated_looping") }
-            for (_, resource) in (looping.isEmpty ? animations : looping) {
-                entity.playAnimation(resource.repeat())
+            let all = Array(library.animations)
+            let looping = all.filter { $0.key.hasSuffix("__auto_generated_looping") }
+            let loops = (looping.isEmpty ? all : looping).map { $0.value }
+            // Se a mesma entidade tem várias timelines (ex.: Eletron = Jitter +
+            // Opacidade), agrupa — senão o segundo playAnimation substituiria o
+            // primeiro e só uma tocaria.
+            if loops.count == 1 {
+                entity.playAnimation(loops[0].repeat())
+            } else if loops.count > 1 {
+                if let group = try? AnimationResource.group(with: loops) {
+                    entity.playAnimation(group)
+                } else {
+                    loops.forEach { entity.playAnimation($0.repeat()) }
+                }
             }
         }
         for child in entity.children {
@@ -473,30 +497,46 @@ private extension AtomView {
 
         photon = loaded
 
-        playAllTimelines(from: loaded)
+        playPhotonScene(from: loaded)
     }
 
-    func spawnZBoson(at worldPosition: SIMD3<Float>) async {
-        guard let atom else { return }
-        let loaded = loader.zBoson.clone(recursive: true)
+    /// Toca a cena do Foton no spawn: a timeline "FotonSpawn" uma vez (aparição) e,
+    /// só **depois que ela termina**, o Spin/Jitter entram em loop.
+    func playPhotonScene(from entity: Entity) {
+        if let library = entity.components[AnimationLibraryComponent.self] {
+            let all = Array(library.animations)
 
-        loaded.scale = .one * 0.0005
+            // Idle (todas menos a FotonSpawn) — vão em loop no fim da aparição.
+            let idleLoops = all
+                .filter { $0.key.hasSuffix("__auto_generated_looping") && !$0.key.contains("FotonSpawn") }
+                .map { $0.value }
 
-        let localPos = atom.convert(position: worldPosition, from: nil)
-        let direction = normalize(localPos)
-        let adjustedPos = localPos + (direction * -0.007)
+            if let spawn = all.first(where: { $0.key.hasSuffix("/FotonSpawn") })?.value {
+                entity.playAnimation(spawn)
+                let duration = spawn.definition.duration
+                Task {
+                    try? await Task.sleep(for: .seconds(duration))
+                    playIdleLoops(idleLoops, on: entity)
+                }
+            } else {
+                playIdleLoops(idleLoops, on: entity)
+            }
+        }
+        for child in entity.children {
+            playPhotonScene(from: child)
+        }
+    }
 
-        loaded.position = adjustedPos
-
-        atom.addChild(loaded)
-
-        guard let zBosonEntity = loaded.findEntity(named: "zBoson") else { return }
-
-        zBoson = zBosonEntity
-        vm.setExperienceState(.zBosonSpawned)
-
-        if let animation = zBosonEntity.availableAnimations.first {
-            zBosonEntity.playAnimation(animation.repeat())
+    /// Toca as timelines idle em loop, agrupadas quando são várias na mesma
+    /// entidade (senão o último playAnimation substituiria os anteriores).
+    func playIdleLoops(_ loops: [AnimationResource], on entity: Entity) {
+        guard !loops.isEmpty else { return }
+        if loops.count == 1 {
+            entity.playAnimation(loops[0].repeat())
+        } else if let group = try? AnimationResource.group(with: loops.map { $0.repeat() }) {
+            entity.playAnimation(group)
+        } else {
+            loops.forEach { entity.playAnimation($0.repeat()) }
         }
     }
 
@@ -504,7 +544,8 @@ private extension AtomView {
         guard let atom else { return }
         let loaded = loader.particles.clone(recursive: true)
 
-        loaded.scale = .one * 0.0005
+        // ▼▼▼ ESCALA DA CENA ParticlesBosonZ — ajuste aqui pra testar ▼▼▼
+        loaded.scale = .one * 0.0012
 
         let localPos = atom.convert(position: worldPosition, from: nil)
         let direction = normalize(localPos)
@@ -516,8 +557,44 @@ private extension AtomView {
 
         particles = loaded
 
-        if let particles, let animation = particles.availableAnimations.first {
-            particles.playAnimation(animation)
+        // O BosonZ tocável é o que está dentro da própria cena (revelado pela
+        // coreografia) — não há mais spawn separado.
+        zBoson = loaded.findEntity(named: "BosonZ")
+
+        // A cena tem a coreografia "Particles" (one-shot) e loops aninhados
+        // (Jitter/Opacidade dos electrons + Jitter do BosonZ). Percorre toda a
+        // hierarquia (a cena vem com wrappers "Root" aninhados).
+        playParticlesScene(from: loaded)
+    }
+
+    /// Toca a cena ParticlesBosonZ: a timeline principal "Particles" uma vez
+    /// (coreografia dos electrons + reveal do BosonZ) e as timelines aninhadas
+    /// (Jitter/Opacidade) em loop.
+    func playParticlesScene(from entity: Entity) {
+        if let library = entity.components[AnimationLibraryComponent.self] {
+            let all = Array(library.animations)
+
+            // Loops aninhados (Jitter/Opacidade), agrupados por entidade.
+            let loops = all
+                .filter { $0.key.hasSuffix("__auto_generated_looping") && !$0.key.contains("/Particles") }
+                .map { $0.value }
+            if loops.count == 1 {
+                entity.playAnimation(loops[0].repeat())
+            } else if loops.count > 1 {
+                if let group = try? AnimationResource.group(with: loops) {
+                    entity.playAnimation(group)
+                } else {
+                    loops.forEach { entity.playAnimation($0.repeat()) }
+                }
+            }
+
+            // Animação principal "Particles" — one-shot.
+            if let main = all.first(where: { $0.key.hasSuffix("/Particles") })?.value {
+                entity.playAnimation(main)
+            }
+        }
+        for child in entity.children {
+            playParticlesScene(from: child)
         }
     }
 }

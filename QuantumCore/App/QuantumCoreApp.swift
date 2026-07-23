@@ -46,6 +46,12 @@ struct QuantumCoreApp: App {
             .task {
                 await loader.loadAllAssets()
             }
+            #if os(iOS)
+            // Esconde a status bar (hora/wifi/bateria) no app inteiro — experiência
+            // imersiva em tela cheia.
+            .statusBarHidden(true)
+            .persistentSystemOverlays(.hidden)
+            #endif
         }
         #if os(visionOS)
         .defaultSize(CGSize(width: 960, height: 720))
